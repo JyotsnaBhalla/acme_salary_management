@@ -30,6 +30,17 @@ module Api
         end
       end
 
+      def export
+        csv = CSV.generate(headers: true) do |out|
+          out << %w[employee_number name email country department job_title status current_salary currency]
+          Employee.includes(:salaries).find_each do |e|
+            s = e.current_salary
+            out << [e.employee_number, "#{e.first_name} #{e.last_name}", e.email, e.country, e.department, e.job_title, e.employment_status, s&.amount, s&.currency]
+          end
+        end
+        send_data csv, filename: "employees.csv", type: "text/csv"
+      end
+
       private
       def employee_params
         params.require(:employee).permit(:first_name, :last_name, :email, :country, :department, :job_title, :employment_status, :joining_date)
